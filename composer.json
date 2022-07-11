@@ -13,8 +13,10 @@
         "laravel/tinker": "^2.5"
     },
     "require-dev": {
+        "brainmaestro/composer-git-hooks": "^2.8",
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",
+        "friendsofphp/php-cs-fixer": "^3.8",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^5.10",
@@ -50,6 +52,16 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "hooks": {
+            "pre-commit": [
+                "for FILE in `git diff --staged --name-only | grep .php`; do",
+                "if [ -e $FILE ]; then",
+                "./vendor/bin/php-cs-fixer fix $FILE",
+                "git add $FILE",
+                "fi",
+                "done"
+            ]
         }
     },
     "config": {
