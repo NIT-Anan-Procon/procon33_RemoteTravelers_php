@@ -6,12 +6,12 @@
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
+        "darkaonline/l5-swagger": "^8.3",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
-        "laravel/tinker": "^2.5",
-        "zircote/swagger-php": "^4.4"
+        "laravel/tinker": "^2.5"
     },
     "require-dev": {
         "brainmaestro/composer-git-hooks": "^2.8",
