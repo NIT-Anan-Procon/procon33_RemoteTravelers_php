@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
+
+    /**
+     * @OA\Info(
+     *     version="1.0.0",
+     *     title="API仕様書",
+     *     description="",
+     * )
+     */
+
     public function signup() {
         try {
             $data = Account::insertGetId([
