@@ -19,3 +19,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('user/signup', 'App\Http\Controllers\API\AccountController@signup');
+Route::post('common/add-comment', 'App\Http\Controllers\API\CommonController@addComment');
