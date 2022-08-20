@@ -14,7 +14,7 @@ class CreateTravelsTable extends Migration
     public function up()
     {
         Schema::create('travels', function (Blueprint $table) {
-            $table->bigIncrements('travel_id');
+            $table->integer('travel_id');
             $table->integer('user_id');
             $table->tinyInteger('traveler');
             $table->tinyInteger('finished');
