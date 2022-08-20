@@ -15,6 +15,7 @@ class Location extends Model
     ];
     protected $fillable = [
         'user_id',
-        'location'
+        'location',
+        'flag'
     ];
 }

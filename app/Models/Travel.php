@@ -13,6 +13,7 @@ class Travel extends Model
     protected $fillable = [
         'travel_id',
         'user_id',
-        'traveler'
+        'traveler',
+        'finished'
     ];
 }
