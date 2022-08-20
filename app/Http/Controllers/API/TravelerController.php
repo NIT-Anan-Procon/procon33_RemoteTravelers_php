@@ -66,7 +66,12 @@ class TravelerController extends Controller
 
             $user_id = $request->input('user_id');
             $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->select('travel_id')->get()[0]->travel_id;
-            $travels = Travel::where('travel_id', $travel_id)->update(['finished' => 1]);
+            $travels = Travel::where('travel_id', $travel_id);
+            if (count($travels) != 0) {
+                $travels->update([
+                    'finished' => 1
+                ]);
+            }
             DB::commit();
 
             $result = [
