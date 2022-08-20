@@ -18,6 +18,7 @@ class CreateTravelsTable extends Migration
             $table->integer('user_id');
             $table->tinyInteger('traveler');
             $table->tinyInteger('finished');
+            $table->timestamp('updated_at')->nullable();
         });
     }
 

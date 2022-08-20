@@ -10,6 +10,9 @@ class Travel extends Model
     use HasFactory;
 
     protected $table = 'travels';
+    protected $dates = [
+        'updated_at'
+    ];
     protected $fillable = [
         'travel_id',
         'user_id',
