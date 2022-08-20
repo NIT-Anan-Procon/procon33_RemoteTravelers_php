@@ -10,6 +10,80 @@ use Illuminate\Support\Facades\DB;
 
 class TravelerController extends Controller
 {
+    public function addReport(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = $request->all();
+            $user_id = $data['user_id'];
+            $image = $request->file('image');
+            $comment = $data['comment'];
+            $excitement = $data['excitement'];
+            $location = $data['location'];
+            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get()[0]->travel_id;
+
+            if ($request->hasFile('image')) {
+                $path = \Storage::put('/public', $image);
+                $path = explode('/', $path);
+            } else {
+                throw new \Exception('no image');
+            }
+
+            if (empty($travel_id)) {
+                throw new \Exception('permision denied');
+            }
+
+            Report::insert([
+                'travel_id' => $travel_id[0]->travel_id,
+                'image' => $image,
+                'comment' => $comment,
+                'excitement' => $excitement,
+                'location' => $location,
+                'created_at' => null
+            ]);
+
+            DB::commit();
+            $result = [
+                'ok' => true,
+                'error' => null,
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $result = [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
+    public function finishTravel(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user_id = $request->input('user_id');
+            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->select('travel_id')->get()[0]->travel_id;
+            $travels = Travel::where('travel_id', $travel_id)->update(['finished' => 1]);
+            DB::commit();
+
+            $result = [
+                'ok' => true,
+                'error' => null,
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $result = [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
     public function startTravel(Request $request)
     {
         try {
@@ -48,55 +122,6 @@ class TravelerController extends Controller
             DB::rollBack();
 
             // レスポンスを返す
-            $result = [
-                'ok' => false,
-                'error' => $e->getMessage(),
-            ];
-            return $this->resConversionJson($result, $e->getCode());
-        }
-    }
-
-    public function addReport(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-
-            $data = $request->all();
-            $user_id = $data['user_id'];
-            $image = $request->file('image');
-            $comment = $data['comment'];
-            $excitement = $data['excitement'];
-            $location = $data['location'];
-            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get()[0]->travel_id;
-
-            if ($request->hasFile('image')) {
-                $path = \Storage::put('/public', $image);
-                $path = explode('/', $path);
-            } else {
-                throw new \Exception('no image');
-            }
-
-            if (empty($travel_id)) {
-                throw new \Exception('permision denied');
-            }
-
-            Report::insert([
-               'travel_id' => $travel_id[0]->travel_id,
-                'image' => $image,
-                'comment' => $comment,
-                'excitement' => $excitement,
-                'location' => $location,
-                'created_at' => null
-            ]);
-
-            DB::commit();
-            $result = [
-                'ok' => true,
-                'error' => null,
-            ];
-            return $this->resConversionJson($result);
-        } catch (\Exception $e) {
-            DB::rollBack();
             $result = [
                 'ok' => false,
                 'error' => $e->getMessage(),

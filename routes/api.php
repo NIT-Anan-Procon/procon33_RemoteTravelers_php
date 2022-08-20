@@ -22,3 +22,4 @@ Route::post('user/signup', 'App\Http\Controllers\API\AccountController@signup');
 Route::post('common/add-comment', 'App\Http\Controllers\API\CommonController@addComment');
 Route::get('common/check-traveling', 'App\Http\Controllers\API\CommonController@checkTraveling');
 Route::post('traveler/start-travel', 'App\Http\Controllers\API\TravelerController@startTravel');
+Route::post('traveler/finish-travel', 'App\Http\Controllers\API\TravelerController@finishTravel');
