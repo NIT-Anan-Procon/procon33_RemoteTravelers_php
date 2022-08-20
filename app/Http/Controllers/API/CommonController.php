@@ -16,9 +16,9 @@ class CommonController extends Controller
         try {
             $user_id = $data['user_id'];
             $comment = $data['comment'];
-            $travel_id = Travel::where('user_id', $user_id)->select('travel_id')->get();
+            $travel_id = Travel::where('user_id', $user_id)->select('travel_id')->get()[0]->travel_id;
             Comment::insert([
-               'travel_id' => 1,
+               'travel_id' => $travel_id,
                'user_id' => $user_id,
                'comment' => $comment,
                'created_at' => null
