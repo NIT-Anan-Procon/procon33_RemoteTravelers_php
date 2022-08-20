@@ -17,6 +17,7 @@ class CreateLocationsTable extends Migration
             $table->integer('user_id');
             $table->point('location');
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->tinyInteger('flag');
         });
     }
 

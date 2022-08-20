@@ -17,6 +17,7 @@ class CreateTravelsTable extends Migration
             $table->bigIncrements('travel_id');
             $table->integer('user_id');
             $table->tinyInteger('traveler');
+            $table->tinyInteger('finished');
         });
     }
 
