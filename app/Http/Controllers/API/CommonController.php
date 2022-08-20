@@ -46,7 +46,7 @@ class CommonController extends Controller
             $user_id = $request->input('user_id');
             $travel = Travel::where('user_id', $user_id)->where('finished', 0)->get();
 
-            if (empty($travel)) {
+            if (count($travel) == 0) {
                 $result = [
                     'ok' => true,
                     'traveling' => false,
