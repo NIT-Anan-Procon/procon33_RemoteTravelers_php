@@ -14,8 +14,9 @@ class Location extends Model
         'created_at'
     ];
     protected $fillable = [
-        'user_id',
-        'location',
+        'travel_id',
+        'lat',
+        'lon',
         'flag'
     ];
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Report;
+use App\Models\Location;
 use App\Models\Comment;
 use App\Models\Travel;
 use App\Http\Controllers\Controller;
@@ -12,24 +14,35 @@ class CommonController extends Controller
 {
     public function addComment(Request $request)
     {
-        $data = $request->all();
         try {
+            // リクエストから受け取った値を取得
+            $data = $request->all();
             $user_id = $data['user_id'];
             $comment = $data['comment'];
-            $travel_id = Travel::where('user_id', $user_id)->select('travel_id')->get()[0]->travel_id;
-            Comment::insert([
-               'travel_id' => $travel_id,
-               'user_id' => $user_id,
-               'comment' => $comment,
-               'created_at' => null
-            ]);
 
+            // user_idからユーザの旅行情報を識別するためのIDを取得
+            $travel_id = Travel::where('user_id', $user_id)->select('travel_id')->get();
+
+            // ユーザが旅行しているかチェックし、旅レポートを保存
+            if ($travel_id->count() != 0) {
+                $travel_id = $travel_id[0]->travel_id;
+                Comment::insert([
+                    'travel_id' => $travel_id,
+                    'user_id' => $user_id,
+                    'comment' => $comment,
+                ]);
+            } else {
+                throw new \Exception('permission denied');
+            }
+
+            // レスポンスを返す
             $result = [
                 'ok' => true,
                 'error' => false
             ];
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
+            // レスポンスを返す
             $result = [
                 'ok' => false,
                 'error' => $e->getMessage()
@@ -43,10 +56,14 @@ class CommonController extends Controller
         try {
             DB::beginTransaction();
 
+            // リクエストから受け取った値を取得
             $user_id = $request->input('user_id');
+
+            // user_idからユーザの旅行情報を識別するためのIDを取得
             $travel = Travel::where('user_id', $user_id)->where('finished', 0)->get();
 
-            if (count($travel) == 0) {
+            // ユーザが旅行しているかチェックし、ユーザの役割をレスポンスとして返す
+            if ($travel->count() == 0) {
                 $result = [
                     'ok' => true,
                     'traveling' => false,
@@ -71,11 +88,111 @@ class CommonController extends Controller
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // レスポンスを返す
             $result = [
                 'ok' => false,
                 'traveling' => null,
                 'traveler' => null,
                 'error' => $e->getMessage(),
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
+    public function getInfo(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // リクエストから受け取った値を取得
+            $data = $request->all();
+            $user_id = $data['user_id'];
+
+            // user_idからユーザの旅行情報を識別するためのIDを取得
+            $travel = Travel::where('user_id', $user_id)->where('finished', 0)->get();
+
+            // ユーザが旅行に参加しているかチェックし、データを取得
+            if ($travel->count() != 0) {
+                $travel_id = $travel[0]->travel_id;
+                $locations = Location::where('travel_id', $travel_id)->get();
+                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->get();
+                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->get();
+
+                // reportsのimageをパスからファイルに変換
+                foreach ($reports as $report) {
+                    $image = \Storage::get('public/'.$report->image);
+                    $report->image = base64_encode($image);
+                }
+            } else {
+                throw new \Exception('permission denied');
+            }
+
+            // レスポンスを返す
+            $result = [
+                'ok' => true,
+                'location' => $locations,
+                'comments' => $comments,
+                'reports' => $reports,
+                'error' => null
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => false,
+                'data' => null,
+                'error' => $e->getMessage()
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
+    public function saveLocation(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // リクエストから受け取った値を取得
+            $data = $request->all();
+            $user_id = $data['user_id'];
+            $lat = $data['lat'];
+            $lon = $data['lon'];
+            $suggestion_flag = $data['suggestion_flag'];
+
+            // user_idからユーザの旅行情報を識別するためのIDを取得
+            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+
+            // ユーザが旅行しているかチェックし、位置情報を保存
+            if ($travel_id->count() != 0) {
+                $travel_id = $travel_id[0]->travel_id;
+                Location::insert([
+                    'travel_id' => $travel_id,
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'flag' => $suggestion_flag,
+                ]);
+            } else {
+                throw new \Exception('permission denied');
+            }
+
+            DB::commit();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => true,
+                'error' => false
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => false,
+                'error' => $e->getMessage()
             ];
             return $this->resConversionJson($result, $e->getCode());
         }

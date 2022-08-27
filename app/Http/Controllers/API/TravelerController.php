@@ -15,14 +15,19 @@ class TravelerController extends Controller
         try {
             DB::beginTransaction();
 
+            // リクエストから受け取った値を取得
             $data = $request->all();
             $user_id = $data['user_id'];
             $image = $request->file('image');
             $comment = $data['comment'];
             $excitement = $data['excitement'];
-            $location = $data['location'];
-            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get()[0]->travel_id;
+            $lat = $data['lat'];
+            $lon = $data['lon'];
 
+            // user_idからユーザの旅行情報を識別するためのIDを取得
+            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+
+            // 画像をサーバ上に保存し、パスを取得
             if ($request->hasFile('image')) {
                 $path = \Storage::put('/public', $image);
                 $path = explode('/', $path);
@@ -30,20 +35,25 @@ class TravelerController extends Controller
                 throw new \Exception('no image');
             }
 
-            if (empty($travel_id)) {
-                throw new \Exception('permision denied');
+            // ユーザが旅行しているかチェックし、旅レポートを保存
+            if ($travel_id->count() != 0) {
+                $travel_id = $travel_id[0]->travel_id;
+                Report::insert([
+                    'travel_id' => $travel_id,
+                    'image' => $path[1],
+                    'comment' => $comment,
+                    'excitement' => $excitement,
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'created_at' => null
+                ]);
+            } else {
+                throw new \Exception('permission denied');
             }
 
-            Report::insert([
-                'travel_id' => $travel_id[0]->travel_id,
-                'image' => $image,
-                'comment' => $comment,
-                'excitement' => $excitement,
-                'location' => $location,
-                'created_at' => null
-            ]);
-
             DB::commit();
+
+            // レスポンスを返す
             $result = [
                 'ok' => true,
                 'error' => null,
@@ -51,6 +61,8 @@ class TravelerController extends Controller
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // レスポンスを返す
             $result = [
                 'ok' => false,
                 'error' => $e->getMessage(),
@@ -64,12 +76,17 @@ class TravelerController extends Controller
         try {
             DB::beginTransaction();
 
+            // リクエストから受け取った値を取得
             $user_id = $request->input('user_id');
-            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->select('travel_id')->get();
+
+            // ユーザの旅行を取得
+            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+
+            // ユーザが旅行をしているかチェックし、旅行を終了する
             if ($travel_id->count() != 0) {
                 $travel_id = $travel_id[0]->travel_id;
                 $travels = Travel::where('travel_id', $travel_id);
-                if (count($travels) != 0) {
+                if ($travels->count() != 0) {
                     $travels->update([
                         'finished' => 1
                     ]);
@@ -77,6 +94,7 @@ class TravelerController extends Controller
             }
             DB::commit();
 
+            // レスポンスを返す
             $result = [
                 'ok' => true,
                 'error' => null
@@ -84,6 +102,8 @@ class TravelerController extends Controller
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // レスポンスを返す
             $result = [
                 'ok' => false,
                 'error' => $e->getMessage(),
@@ -97,9 +117,14 @@ class TravelerController extends Controller
         try {
             DB::beginTransaction();
 
+            // リクエストから受け取った値を取得
             $data = $request->all();
             $host = $data['host'];
-            $viewers = $data['viewers'];
+            $viewer1 = $data['viewer1'];
+            $viewer2 = $data['viewer2'];
+            $viewer3 = $data['viewer3'];
+
+            // 旅行識別IDをテーブルの最大値から求める
             $travel_id = Travel::max('travel_id') + 1;
 
             // 旅行者をTravelsテーブルに追加
@@ -109,15 +134,21 @@ class TravelerController extends Controller
                 'traveler' => 1,
                 'finished' => 0
             ]);
+
             // 閲覧者をTravelsテーブルに追加
+            $viewers = [$viewer1, $viewer2, $viewer3];
             foreach ($viewers as $viewer) {
-                Travel::insert([
-                    'travel_id' => $travel_id,
-                    'user_id' => $viewer,
-                    'traveler' => 0,
-                    'finished' => 0
-                ]);
+                // データの品質をチェックしテーブルに追加
+                if (!empty($viewer) && $viewer != $host) {
+                    Travel::insert([
+                        'travel_id' => $travel_id,
+                        'user_id' => $viewer,
+                        'traveler' => 0,
+                        'finished' => 0
+                    ]);
+                }
             }
+
             DB::commit();
 
             // レスポンスを返す

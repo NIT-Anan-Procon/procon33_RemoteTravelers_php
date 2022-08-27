@@ -20,7 +20,8 @@ class CreateReportsTable extends Migration
             $table->text('comment');
             $table->integer('excitement');
             $table->timestamp('created_at');
-            $table->text('location');
+            $table->double('lat');
+            $table->double('lon');
         });
     }
 

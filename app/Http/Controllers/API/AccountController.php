@@ -4,26 +4,24 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Account;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
 
     public function signup() {
         try {
-            $data = Account::insertGetId([
-                'user_id' => null
-            ]);
+            // ユーザを新規登録し、登録したユーザのIDを取得
+            $data = Account::insertGetId([]);
 
+            // レスポンスを返す
             $result = [
                 'ok' => true,
                 'data' => $data,
                 'error' => null
             ];
             return $this->resConversionJson($result);
-        } catch (Exception $e) {
-            DB::rollBack();
+        } catch (\Exception $e) {
+            // レスポンスを返す
             $result = [
                 'ok' => false,
                 'data' => null,

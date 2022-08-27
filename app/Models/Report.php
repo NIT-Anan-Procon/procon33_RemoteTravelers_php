@@ -19,6 +19,7 @@ class Report extends Model
         'image',
         'comment',
         'excitement',
-        'location'
+        'lat',
+        'lon',
     ];
 }
