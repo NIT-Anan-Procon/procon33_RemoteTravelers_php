@@ -38,7 +38,7 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'error' => false
+                'error' => null,
             ];
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
@@ -183,7 +183,7 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'error' => false
+                'error' => null,
             ];
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
@@ -192,7 +192,7 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
             return $this->resConversionJson($result, $e->getCode());
         }

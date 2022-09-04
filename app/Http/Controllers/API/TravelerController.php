@@ -144,7 +144,7 @@ class TravelerController extends Controller
                         'travel_id' => $travel_id,
                         'user_id' => $viewer,
                         'traveler' => 0,
-                        'finished' => 0
+                        'finished' => 0,
                     ]);
                 }
             }
