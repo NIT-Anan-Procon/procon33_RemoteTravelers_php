@@ -119,8 +119,8 @@ class CommonController extends Controller
                 $current_location = Location::where('travel_id', $travel_id)->where('flag', 0)->latest()->select('lat', 'lon')->first();
                 $route = Location::where('travel_id', $travel_id)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
                 $destination = Location::where('travel_id', $travel_id)->where('flag', 1)->latest()->select('lat', 'lon')->first();
-                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->get();
-                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->get();
+                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('user_id', 'comment')->get();
+                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon')->get();
             } else {
                 throw new \Exception('permission denied');
             }
