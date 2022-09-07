@@ -41,7 +41,7 @@ class TravelerController extends Controller
                 $travel_id = $travel_id[0]->travel_id;
                 Report::insert([
                     'travel_id' => $travel_id,
-                    // 'image' => $path[1],
+                    'image' => 'a',
                     'comment' => $comment,
                     'excitement' => $excitement,
                     'lat' => $lat,
