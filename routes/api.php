@@ -16,3 +16,4 @@ Route::post('traveler/add-report', 'App\Http\Controllers\API\TravelerController@
 Route::post('traveler/finish-travel', 'App\Http\Controllers\API\TravelerController@finishTravel');
 Route::post('traveler/start-travel', 'App\Http\Controllers\API\TravelerController@startTravel');
 Route::post('user/signup', 'App\Http\Controllers\API\AccountController@signup');
+Route::post('save-image', 'App\Http\Controllers\API\TravelerController@saveImage');

@@ -25,8 +25,15 @@ class TravelerController extends Controller
             $lat = $data['lat'];
             $lon = $data['lon'];
 
+            // 旅レポートの画像から旅行者の状況をAPIをたたいて判定
+            $url = "http://127.0.0.1:8000/api/save-image";
+            $situationApiResponse = Http::withBody(
+                base64_encode($image), 'image/*'
+            )->timeout(40)->post($url);
+            // $situation = $situationApiResponse->json()->situation;
+
             // user_idからユーザの旅行情報を識別するためのIDを取得
-            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+            $travelId = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
 
             // 画像をサーバ上に保存し、パスを取得
             if ($request->hasFile('image')) {
@@ -36,18 +43,23 @@ class TravelerController extends Controller
                 throw new \Exception('no image');
             }
 
-            // ユーザが旅行しているかチェックし、旅レポートを保存
-            if ($travel_id->count() != 0) {
-                $travel_id = $travel_id[0]->travel_id;
-                Report::insert([
-                    'travel_id' => $travel_id,
+            // ユーザが旅行しているかチェックし、旅レポートと旅行者状況を保存
+            if ($travelId->count() != 0) {
+                $travelId = $travelId[0]->travel_id;
+                $reportId = Report::insertGetId([
+                    'travel_id' => $travelId,
                     'image' => $path[1],
                     'comment' => $comment,
                     'excitement' => $excitement,
                     'lat' => $lat,
                     'lon' => $lon,
-                    'created_at' => null
+                    'created_at' => null,
                 ]);
+                // Situation::insert([
+                //    'report_id' => $reportId,
+                //    'situation' => $situation,
+                //    'created_at' => null,
+                // ]);
             } else {
                 throw new \Exception('permission denied');
             }
@@ -57,6 +69,7 @@ class TravelerController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => true,
+                'res' => $situationApiResponse,
                 'error' => null,
             ];
             return $this->resConversionJson($result);
@@ -168,5 +181,15 @@ class TravelerController extends Controller
             ];
             return $this->resConversionJson($result, $e->getCode());
         }
+    }
+
+    public function saveImage(Request $request)
+    {
+        $image = $request->file('image');
+        $path = \Storage::put('/public', $image);
+        $result = [
+            'path' => $path,
+        ];
+        return $this->resConversionJson($result);
     }
 }
