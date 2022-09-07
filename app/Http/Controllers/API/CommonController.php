@@ -38,7 +38,7 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'error' => false
+                'error' => null,
             ];
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
@@ -113,28 +113,33 @@ class CommonController extends Controller
             $travel = Travel::where('user_id', $user_id)->where('finished', 0)->get();
 
             // ユーザが旅行に参加しているかチェックし、データを取得
+            // 現在地、現在地までの経路、提案されている目的地、コメント、旅レポートを取得
             if ($travel->count() != 0) {
                 $travel_id = $travel[0]->travel_id;
-                $locations = Location::where('travel_id', $travel_id)->get();
-                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->get();
-                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->get();
-
-                // reportsのimageをパスからファイルに変換
-                foreach ($reports as $report) {
-                    $image = \Storage::get('public/'.$report->image);
-                    $report->image = base64_encode($image);
-                }
+                $current_location = Location::where('travel_id', $travel_id)->where('flag', 0)->latest()->select('lat', 'lon')->first();
+                $route = Location::where('travel_id', $travel_id)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
+                $destination = Location::where('travel_id', $travel_id)->where('flag', 1)->latest()->select('lat', 'lon')->get();
+                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('user_id', 'comment')->get();
+                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon')->get();
             } else {
                 throw new \Exception('permission denied');
+            }
+
+            // reportsのimageをパスからファイルに変換
+            foreach ($reports as $report) {
+                $image = \Storage::get('public/'.$report->image);
+                $report->image = base64_encode($image);
             }
 
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'location' => $locations,
+                'destination' => $destination,
+                'current_location' => $current_location,
+                'route' => $route,
                 'comments' => $comments,
                 'reports' => $reports,
-                'error' => null
+                'error' => null,
             ];
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
@@ -183,7 +188,7 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'error' => false
+                'error' => null,
             ];
             return $this->resConversionJson($result);
         } catch (\Exception $e) {
@@ -192,17 +197,9 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
             return $this->resConversionJson($result, $e->getCode());
         }
-    }
-
-    private function resConversionJson($result, $statusCode=200)
-    {
-        if(empty($statusCode) || $statusCode < 100 || $statusCode >= 600){
-            $statusCode = 500;
-        }
-        return response()->json($result, $statusCode, ['Content-Type' => 'application/json'], JSON_UNESCAPED_SLASHES);
     }
 }

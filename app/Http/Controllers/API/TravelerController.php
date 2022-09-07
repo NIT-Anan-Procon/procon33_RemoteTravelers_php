@@ -7,6 +7,7 @@ use App\Models\Travel;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class TravelerController extends Controller
 {
@@ -144,7 +145,7 @@ class TravelerController extends Controller
                         'travel_id' => $travel_id,
                         'user_id' => $viewer,
                         'traveler' => 0,
-                        'finished' => 0
+                        'finished' => 0,
                     ]);
                 }
             }
@@ -167,13 +168,5 @@ class TravelerController extends Controller
             ];
             return $this->resConversionJson($result, $e->getCode());
         }
-    }
-
-    private function resConversionJson($result, $statusCode=200)
-    {
-        if(empty($statusCode) || $statusCode < 100 || $statusCode >= 600){
-            $statusCode = 500;
-        }
-        return response()->json($result, $statusCode, ['Content-Type' => 'application/json'], JSON_UNESCAPED_SLASHES);
     }
 }
