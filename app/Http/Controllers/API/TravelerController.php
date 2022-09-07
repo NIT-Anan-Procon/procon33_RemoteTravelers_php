@@ -18,7 +18,7 @@ class TravelerController extends Controller
             // リクエストから受け取った値を取得
             $data = $request->all();
             $user_id = $data['user_id'];
-            $image = $request->file('image');
+            // $image = $request->file('image');
             $comment = $data['comment'];
             $excitement = $data['excitement'];
             $lat = $data['lat'];
@@ -28,19 +28,19 @@ class TravelerController extends Controller
             $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
 
             // 画像をサーバ上に保存し、パスを取得
-            if ($request->hasFile('image')) {
-                $path = \Storage::put('/public', $image);
-                $path = explode('/', $path);
-            } else {
-                throw new \Exception('no image');
-            }
+            // if ($request->hasFile('image')) {
+            //     $path = \Storage::put('/public', $image);
+            //     $path = explode('/', $path);
+            // } else {
+            //     throw new \Exception('no image');
+            // }
 
             // ユーザが旅行しているかチェックし、旅レポートを保存
             if ($travel_id->count() != 0) {
                 $travel_id = $travel_id[0]->travel_id;
                 Report::insert([
                     'travel_id' => $travel_id,
-                    'image' => $path[1],
+                    // 'image' => $path[1],
                     'comment' => $comment,
                     'excitement' => $excitement,
                     'lat' => $lat,
