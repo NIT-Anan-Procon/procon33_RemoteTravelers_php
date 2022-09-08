@@ -218,7 +218,7 @@ class CommonController extends Controller
             $userId = $request->input('user_id');
 
             // 最終更新日時を取得
-            $lastUpdate = Account::where('user_id', $userId)->select('updated_at')->get()[0];
+            $lastUpdate = Account::where('user_id', $userId)->select('updated_at')->get()[0]->updated_at;
 
             // user_idからユーザの旅行情報を識別するためのIDを取得
             $travel = Travel::where('user_id', $userId)->where('finished', 0)->get();
