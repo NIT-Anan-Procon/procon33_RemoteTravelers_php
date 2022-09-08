@@ -185,11 +185,24 @@ class TravelerController extends Controller
 
     public function saveImage(Request $request)
     {
-        $image = $request->file('image');
-        $path = \Storage::put('/public', $image);
-        $result = [
-            'path' => $path,
-        ];
-        return $this->resConversionJson($result);
+        try {
+            $image = $request->file('image');
+            if ($request->hasFile('image')) {
+                $path = \Storage::put('/public', $image);
+                $path = explode('/', $path);
+            } else {
+                throw new \Exception('no image');
+            }
+            $result = [
+                'path' => $path,
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            $result = [
+                'error' => $e->getMessage(),
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+
     }
 }
