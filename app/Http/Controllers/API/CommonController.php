@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Account;
 use App\Models\Report;
 use App\Models\Location;
 use App\Models\Comment;
@@ -106,11 +107,10 @@ class CommonController extends Controller
             DB::beginTransaction();
 
             // リクエストから受け取った値を取得
-            $data = $request->all();
-            $user_id = $data['user_id'];
+            $userId = $request->input('user_id');
 
             // user_idからユーザの旅行情報を識別するためのIDを取得
-            $travel = Travel::where('user_id', $user_id)->where('finished', 0)->get();
+            $travel = Travel::where('user_id', $userId)->where('finished', 0)->get();
 
             // ユーザが旅行に参加しているかチェックし、データを取得
             // 現在地、現在地までの経路、提案されている目的地、コメント、旅レポートを取得
@@ -167,6 +167,7 @@ class CommonController extends Controller
             $lon = $data['lon'];
             $suggestion_flag = $data['suggestion_flag'];
 
+            // suggestion_flagの値によって与える権限を変更
             // user_idからユーザの旅行情報を識別するためのIDを取得
             if ($suggestion_flag == 1) {
                 $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 0)->get();
@@ -192,6 +193,82 @@ class CommonController extends Controller
             // レスポンスを返す
             $result = [
                 'ok' => true,
+                'error' => null,
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
+    public function updateInfo(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // リクエストから受け取った値を取得
+            $userId = $request->input('user_id');
+
+            // 最終更新日時を取得
+            $lastUpdate = Account::where('user_id', $userId)->select('last_update')->first();
+
+            // user_idからユーザの旅行情報を識別するためのIDを取得
+            $travel = Travel::where('user_id', $userId)->where('finished', 0)->get();
+
+            // ユーザが旅行に参加しているかチェックし、データを取得
+            if ($travel->count() == 0) {
+                throw new \Exception('permission denied');
+            }
+
+            // 旅行を識別するIDを取得
+            $travel_id = $travel[0]->travel_id;
+
+            // それぞれのテーブルがユーザの最終更新日時より新しいデータがあるかチェック
+            $locationUpdateFlag = Location::where('travel_id', $travel_id)->where('created_at', '>', $lastUpdate)->count();
+            $commentUpdateFlag = Comment::where('travel_id', $travel_id)->where('created_at', '>', $lastUpdate)->count();
+            $reportUpdateFlag = Report::where('travel_id', $travel_id)->where('created_at', '>', $lastUpdate)->count();
+
+            // 更新があればデータを取得
+            if ($locationUpdateFlag) {
+                $current_location = Location::where('travel_id', $travel_id)->where('flag', 0)->latest()->select('lat', 'lon')->first();
+                $route = Location::where('travel_id', $travel_id)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
+                $destination = Location::where('travel_id', $travel_id)->where('flag', 1)->latest()->select('lat', 'lon')->get();
+            } else {
+                $current_location = null;
+                $route = null;
+                $destination = null;
+            }
+
+            if ($commentUpdateFlag) {
+                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon')->get();
+            } else {
+                $comments = null;
+            }
+
+            if ($reportUpdateFlag) {
+                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('image', 'lat', 'lon')->get();
+            } else {
+                $reports = null;
+            }
+
+            // 最終更新日時を更新
+            Account::where('user_id', $userId)->update();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => true,
+                'current_location' => $current_location,
+                'route' => $route,
+                'destination' => $destination,
+                'comments' => $comments,
+                'reports' => $reports,
                 'error' => null,
             ];
             return $this->resConversionJson($result);
