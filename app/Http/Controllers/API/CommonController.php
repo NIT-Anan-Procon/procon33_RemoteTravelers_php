@@ -168,7 +168,11 @@ class CommonController extends Controller
             $suggestion_flag = $data['suggestion_flag'];
 
             // user_idからユーザの旅行情報を識別するためのIDを取得
-            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 0)->select('travel_id')->get();
+            if ($suggestion_flag == 1) {
+                $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 0)->get();
+            } else {
+                $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->get();
+            }
 
             // ユーザが旅行しているかチェックし、位置情報を保存
             if ($travel_id->count() != 0) {
