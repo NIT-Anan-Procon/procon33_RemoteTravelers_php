@@ -15,6 +15,7 @@ Route::post('common/save-location', 'App\Http\Controllers\API\CommonController@s
 Route::post('traveler/add-report', 'App\Http\Controllers\API\TravelerController@addReport');
 Route::post('traveler/finish-travel', 'App\Http\Controllers\API\TravelerController@finishTravel');
 Route::post('traveler/start-travel', 'App\Http\Controllers\API\TravelerController@startTravel');
+Route::get('user/signup', 'App\Http\Controllers\API\AccountController@signup');
 Route::post('user/signup', 'App\Http\Controllers\API\AccountController@signup');
 Route::get('save-image', 'App\Http\Controllers\API\TravelerController@saveImage');
 Route::post('save-image', 'App\Http\Controllers\API\TravelerController@saveImage');
