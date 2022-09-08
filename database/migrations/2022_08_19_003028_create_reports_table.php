@@ -19,7 +19,7 @@ class CreateReportsTable extends Migration
             $table->text('image');
             $table->text('comment');
             $table->integer('excitement');
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->double('lat');
             $table->double('lon');
         });

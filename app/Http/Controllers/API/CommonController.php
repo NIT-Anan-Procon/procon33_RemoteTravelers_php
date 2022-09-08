@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Comment;
 use App\Models\Travel;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -217,7 +218,7 @@ class CommonController extends Controller
             $userId = $request->input('user_id');
 
             // 最終更新日時を取得
-            $lastUpdate = Account::where('user_id', $userId)->select('updated_at')->first();
+            $lastUpdate = Account::where('user_id', $userId)->select('updated_at')->get()[0];
 
             // user_idからユーザの旅行情報を識別するためのIDを取得
             $travel = Travel::where('user_id', $userId)->where('finished', 0)->get();
@@ -236,7 +237,7 @@ class CommonController extends Controller
             $reportUpdateFlag = Report::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
 
             // 更新があればデータを取得
-            if ($locationUpdateFlag) {
+            if ($locationUpdateFlag > 0) {
                 $current_location = Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first();
                 $route = Location::where('travel_id', $travelId)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
                 $destination = Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get();
@@ -246,20 +247,25 @@ class CommonController extends Controller
                 $destination = null;
             }
 
-            if ($commentUpdateFlag) {
-                $comments = Comment::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon')->get();
+            if ($commentUpdateFlag > 0) {
+                $comments = Comment::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('comment')->get();
             } else {
                 $comments = null;
             }
 
-            if ($reportUpdateFlag) {
-                $reports = Report::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('image', 'lat', 'lon')->get();
+            if ($reportUpdateFlag > 0) {
+                $reports = Report::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('image', 'excitement', 'lat', 'lon')->get();
             } else {
                 $reports = null;
             }
 
+            DB::commit();
+
             // 最終更新日時を更新
-            $account = Account::where('user_id', $userId)->update([]);
+            $account = Account::where("user_id", $userId)->first();
+            $account->touch();
+
+            DB::commit();
 
             // レスポンスを返す
             $result = [
@@ -269,6 +275,10 @@ class CommonController extends Controller
                 'destination' => $destination,
                 'comments' => $comments,
                 'reports' => $reports,
+                'location_update_flag' => $locationUpdateFlag,
+                'comment_update_flag' => $commentUpdateFlag,
+                'report_update_flag' => $reportUpdateFlag,
+                'lastupdate' => $lastUpdate,
                 'error' => null,
             ];
             return $this->resConversionJson($result);
