@@ -228,18 +228,18 @@ class CommonController extends Controller
             }
 
             // 旅行を識別するIDを取得
-            $travel_id = $travel[0]->travel_id;
+            $travelId = $travel[0]->travel_id;
 
             // それぞれのテーブルがユーザの最終更新日時より新しいデータがあるかチェック
-            $locationUpdateFlag = Location::where('travel_id', $travel_id)->where('created_at', '>', $lastUpdate)->count();
-            $commentUpdateFlag = Comment::where('travel_id', $travel_id)->where('created_at', '>', $lastUpdate)->count();
-            $reportUpdateFlag = Report::where('travel_id', $travel_id)->where('created_at', '>', $lastUpdate)->count();
+            $locationUpdateFlag = Location::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
+            $commentUpdateFlag = Comment::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
+            $reportUpdateFlag = Report::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
 
             // 更新があればデータを取得
             if ($locationUpdateFlag) {
-                $current_location = Location::where('travel_id', $travel_id)->where('flag', 0)->latest()->select('lat', 'lon')->first();
-                $route = Location::where('travel_id', $travel_id)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
-                $destination = Location::where('travel_id', $travel_id)->where('flag', 1)->latest()->select('lat', 'lon')->get();
+                $current_location = Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first();
+                $route = Location::where('travel_id', $travelId)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
+                $destination = Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get();
             } else {
                 $current_location = null;
                 $route = null;
@@ -247,19 +247,19 @@ class CommonController extends Controller
             }
 
             if ($commentUpdateFlag) {
-                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon')->get();
+                $comments = Comment::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon')->get();
             } else {
                 $comments = null;
             }
 
             if ($reportUpdateFlag) {
-                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('image', 'lat', 'lon')->get();
+                $reports = Report::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('image', 'lat', 'lon')->get();
             } else {
                 $reports = null;
             }
 
             // 最終更新日時を更新
-            Account::where('user_id', $userId)->update();
+            $account = Account::where('user_id', $userId)->update([]);
 
             // レスポンスを返す
             $result = [

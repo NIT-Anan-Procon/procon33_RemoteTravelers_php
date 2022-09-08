@@ -10,6 +10,7 @@ class Account extends Model
     use HasFactory;
 
     protected $table = 'accounts';
+    protected $dates = ['updated_at'];
     protected $fillable = [
         'user_id'
     ];
