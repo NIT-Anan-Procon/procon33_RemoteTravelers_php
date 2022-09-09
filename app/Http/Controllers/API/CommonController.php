@@ -171,8 +171,10 @@ class CommonController extends Controller
 
             // suggestion_flagの値によって与える権限を変更
             // user_idからユーザの旅行情報を識別するためのIDを取得
+            //前回の行先提案を削除
             if ($suggestionFlag == 1) {
                 $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 0)->get();
+                Location::where('user_id', $userId)->where('flag', $suggestionFlag)->delete();
             } else {
                 $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->get();
             }
@@ -186,6 +188,7 @@ class CommonController extends Controller
             $travelId = $travelId[0]->travel_id;
             Location::insert([
                 'travel_id' => $travelId,
+                'user_id' => $userId,
                 'lat' => $lat,
                 'lon' => $lon,
                 'flag' => $suggestionFlag,
