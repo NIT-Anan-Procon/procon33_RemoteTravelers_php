@@ -39,6 +39,8 @@ class CommonController extends Controller
                 'comment' => $comment,
             ]);
 
+            DB::commit();
+
             // レスポンスを返す
             $result = [
                 'ok' => true,
