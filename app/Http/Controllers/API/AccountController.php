@@ -8,7 +8,8 @@ use App\Http\Controllers\Controller;
 class AccountController extends Controller
 {
 
-    public function signup() {
+    public function signup(): \Illuminate\Http\JsonResponse
+    {
         try {
             // ユーザを新規登録し、登録したユーザのIDを取得
             $data = Account::insertGetId([]);

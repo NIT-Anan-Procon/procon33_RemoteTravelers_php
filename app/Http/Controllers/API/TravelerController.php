@@ -2,38 +2,30 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Situation;
 use App\Models\Report;
 use App\Models\Travel;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class TravelerController extends Controller
 {
-    public function addReport(Request $request)
+    public function addReport(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             DB::beginTransaction();
 
             // リクエストから受け取った値を取得
-            $data = $request->all();
-            $user_id = $data['user_id'];
+            $userId = $request->input('user_id');
             $image = $request->file('image');
-            $comment = $data['comment'];
-            $excitement = $data['excitement'];
-            $lat = $data['lat'];
-            $lon = $data['lon'];
+            $comment = $request->input('comment');
+            $excitement = $request->input('excitement');
+            $lat = $request->input('lat');
+            $lon = $request->input('lon');
 
-            // 旅レポートの画像から旅行者の状況をAPIをたたいて判定
-            $url = "http://127.0.0.1:8000/api/save-image";
-            $situationApiResponse = Http::withBody(
-                base64_encode($image), 'image/*'
-            )->timeout(40)->post($url);
-            // $situation = $situationApiResponse->json()->situation;
-
-            // user_idからユーザの旅行情報を識別するためのIDを取得
-            $travelId = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+            // userIdからユーザの旅行情報を識別するためのIDを取得
+            $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
 
             // 画像をサーバ上に保存し、パスを取得
             if ($request->hasFile('image')) {
@@ -43,33 +35,49 @@ class TravelerController extends Controller
                 throw new \Exception('no image');
             }
 
-            // ユーザが旅行しているかチェックし、旅レポートと旅行者状況を保存
-            if ($travelId->count() != 0) {
-                $travelId = $travelId[0]->travel_id;
-                $reportId = Report::insertGetId([
-                    'travel_id' => $travelId,
-                    'image' => $path[1],
-                    'comment' => $comment,
-                    'excitement' => $excitement,
-                    'lat' => $lat,
-                    'lon' => $lon,
-                    'created_at' => null,
-                ]);
-                // Situation::insert([
-                //    'report_id' => $reportId,
-                //    'situation' => $situation,
-                //    'created_at' => null,
-                // ]);
-            } else {
+            // 状況把握APIを呼び出し、状況を取得
+            $base_url = 'http://127.0.0.1:8080/';
+
+            $data = array(
+                'image' => new \CurlFile($image),
+            );
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $base_url);
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $situationApiResponse = curl_exec($ch);
+            curl_close($ch);
+            $situation = json_decode($situationApiResponse, true)['situation'];
+
+            // ユーザが旅行していなければエラーを返す
+            if ($travelId->count() == 0) {
                 throw new \Exception('permission denied');
             }
+
+            // 旅レポートと旅行者状況を保存
+            $travelId = $travelId[0]->travel_id;
+            Report::insert([
+                'travel_id' => $travelId,
+                'image' => $path[1],
+                'comment' => $comment,
+                'excitement' => $excitement,
+                'lat' => $lat,
+                'lon' => $lon,
+                'created_at' => null,
+            ]);
+            Situation::insert([
+                'travel_id' => $travelId,
+                'situation' => $situation,
+                'created_at' => null,
+            ]);
 
             DB::commit();
 
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'res' => $situationApiResponse,
                 'error' => null,
             ];
             return $this->resConversionJson($result);
@@ -85,27 +93,29 @@ class TravelerController extends Controller
         }
     }
 
-    public function finishTravel(Request $request)
+    public function finishTravel(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             DB::beginTransaction();
 
             // リクエストから受け取った値を取得
-            $user_id = $request->input('user_id');
+            $userId = $request->input('user_id');
 
             // ユーザの旅行を取得
-            $travel_id = Travel::where('user_id', $user_id)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+            $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
 
-            // ユーザが旅行をしているかチェックし、旅行を終了する
-            if ($travel_id->count() != 0) {
-                $travel_id = $travel_id[0]->travel_id;
-                $travels = Travel::where('travel_id', $travel_id);
-                if ($travels->count() != 0) {
-                    $travels->update([
-                        'finished' => 1
-                    ]);
-                }
+            // ユーザが旅行をしていなければエラーを返す
+            if ($travelId->count() == 0) {
+                throw new \Exception('permission denied');
             }
+
+            // 旅行を終了する
+            $travelId = $travelId[0]->travel_id;
+            $travels = Travel::where('travel_id', $travelId);
+            $travels->update([
+                'finished' => 1
+            ]);
+
             DB::commit();
 
             // レスポンスを返す
@@ -126,24 +136,23 @@ class TravelerController extends Controller
         }
     }
 
-    public function startTravel(Request $request)
+    public function startTravel(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             DB::beginTransaction();
 
             // リクエストから受け取った値を取得
-            $data = $request->all();
-            $host = $data['host'];
-            $viewer1 = $data['viewer1'];
-            $viewer2 = $data['viewer2'];
-            $viewer3 = $data['viewer3'];
+            $host = $request->input('host');
+            $viewer1 = $request->input('viewer1');
+            $viewer2 = $request->input('viewer2');
+            $viewer3 = $request->input('viewer3');
 
             // 旅行識別IDをテーブルの最大値から求める
-            $travel_id = Travel::max('travel_id') + 1;
+            $travelId = Travel::max('travel_id') + 1;
 
             // 旅行者をTravelsテーブルに追加
             Travel::insert([
-                'travel_id' => $travel_id,
+                'travel_id' => $travelId,
                 'user_id' => $host,
                 'traveler' => 1,
                 'finished' => 0
@@ -155,7 +164,7 @@ class TravelerController extends Controller
                 // データの品質をチェックしテーブルに追加
                 if (!empty($viewer) && $viewer != $host) {
                     Travel::insert([
-                        'travel_id' => $travel_id,
+                        'travel_id' => $travelId,
                         'user_id' => $viewer,
                         'traveler' => 0,
                         'finished' => 0,
@@ -181,28 +190,5 @@ class TravelerController extends Controller
             ];
             return $this->resConversionJson($result, $e->getCode());
         }
-    }
-
-    public function saveImage(Request $request)
-    {
-        try {
-            $image = $request->file('image');
-            if ($request->hasFile('image')) {
-                $path = \Storage::put('/public', $image);
-                $path = explode('/', $path);
-            } else {
-                throw new \Exception('no image');
-            }
-            $result = [
-                'path' => $path,
-            ];
-            return $this->resConversionJson($result);
-        } catch (\Exception $e) {
-            $result = [
-                'error' => $e->getMessage(),
-            ];
-            return $this->resConversionJson($result, $e->getCode());
-        }
-
     }
 }

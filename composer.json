@@ -11,7 +11,9 @@
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
-        "predis/predis": "^2.0"
+        "predis/predis": "^2.0",
+        "ext-curl": "*",
+        "ext-json": "*"
     },
     "require-dev": {
         "brainmaestro/composer-git-hooks": "^2.8",

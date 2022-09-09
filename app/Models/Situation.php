@@ -10,9 +10,12 @@ class Situation extends Model
     use HasFactory;
 
     protected $table = 'situations';
+    protected $dates = [
+        'created_at',
+    ];
     protected $fillable = [
         'situation_id',
         'situation',
-        'report_id'
+        'travel_id',
     ];
 }
