@@ -275,10 +275,6 @@ class CommonController extends Controller
                 'destination' => $destination,
                 'comments' => $comments,
                 'reports' => $reports,
-                'location_update_flag' => $locationUpdateFlag,
-                'comment_update_flag' => $commentUpdateFlag,
-                'report_update_flag' => $reportUpdateFlag,
-                'lastupdate' => $lastUpdate,
                 'error' => null,
             ];
             return $this->resConversionJson($result);
