@@ -15,6 +15,7 @@ class CreateLocationsTable extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->integer('travel_id');
+            $table->integer('user_id');
             $table->double('lat');
             $table->double('lon');
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
