@@ -36,15 +36,15 @@ class TravelerController extends Controller
             }
 
             // 状況把握APIを呼び出し、状況を取得
-            $base_url = 'http://127.0.0.1:8080/';
+            $base_url = 'http://localhost:8080';
 
             $data = array(
-                'image' => new \CURLFile("/var/www/html/laravelapp/storage/app/public/" . $path[1], 'image/*', $path[1]),
+                'image' => new \CURLFile(__DIR__ . '\\..\\..\\..\\..\\storage\\app\\public\\' . $path[1]),
             );
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $base_url);
-            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $situationApiResponse = curl_exec($ch);
