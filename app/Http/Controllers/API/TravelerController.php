@@ -36,7 +36,7 @@ class TravelerController extends Controller
             }
 
             // 状況把握APIを呼び出し、状況を取得
-            $base_url = 'http://127.0.0.1:8080/';
+            $base_url = 'http://127.0.0.1:8081/';
 
             $data = array(
                 'image' => new \CURLFile(__DIR__ . '\\..\\..\\..\\..\\storage\\app\\public\\' . $path[1]),
