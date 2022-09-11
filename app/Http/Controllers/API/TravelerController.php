@@ -36,10 +36,10 @@ class TravelerController extends Controller
             }
 
             // 状況把握APIを呼び出し、状況を取得
-            $base_url = 'http://127.0.0.1:8081/';
+            $base_url = 'http://172.31.50.221:8081/';
 
             $data = array(
-                'image' => new \CURLFile(__DIR__ . '\\..\\..\\..\\..\\storage\\app\\public\\' . $path[1]),
+                'image' => new \CURLFile(__DIR__ . '/../../../../storage/app/public/' . $path[1]),
             );
 
             $ch = curl_init();
@@ -48,8 +48,8 @@ class TravelerController extends Controller
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $situationApiResponse = curl_exec($ch);
-            $situation = json_decode($situationApiResponse, true)['situation'];
             curl_close($ch);
+            $situation = json_decode($situationApiResponse, true)['situation'];
 
             // ユーザが旅行していなければエラーを返す
             if ($travelId->count() == 0) {
