@@ -39,7 +39,7 @@ class TravelerController extends Controller
             $base_url = 'http://127.0.0.1:8080/';
 
             $data = array(
-                'image' => new \CURLFile("/var/www/html/storage/app/public/" . $path[1], 'image/*', $path[1]),
+                'image' => new \CURLFile("/var/www/html/laravelapp/storage/app/public/" . $path[1], 'image/*', $path[1]),
             );
 
             $ch = curl_init();
