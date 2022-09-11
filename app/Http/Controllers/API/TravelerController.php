@@ -39,7 +39,7 @@ class TravelerController extends Controller
             $base_url = 'http://127.0.0.1:8081/';
 
             $data = array(
-                'image' => new \CURLFile(__DIR__ . '\\..\\..\\..\\..\\storage\\app\\public\\' . $path[1]),
+                'image' => new \CURLFile(__DIR__ . '/../../../../storage/app/public/' . $path[1]),
             );
 
             $ch = curl_init();
