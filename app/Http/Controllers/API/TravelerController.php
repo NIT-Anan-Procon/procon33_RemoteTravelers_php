@@ -93,6 +93,58 @@ class TravelerController extends Controller
         }
     }
 
+    public function addReportDebug(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            // リクエストから受け取った値を取得
+            $userId = $request->input('user_id');
+            $comment = $request->input('comment');
+            $excitement = $request->input('excitement');
+            $lat = $request->input('lat');
+            $lon = $request->input('lon');
+
+            // userIdからユーザの旅行情報を識別するためのIDを取得
+            $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+
+            // ユーザが旅行していなければエラーを返す
+            if ($travelId->count() == 0) {
+                throw new \Exception('permission denied');
+            }
+
+            // 旅レポートと旅行者状況を保存
+            $travelId = $travelId[0]->travel_id;
+            Report::insert([
+                'travel_id' => $travelId,
+                'image' => "",
+                'comment' => $comment,
+                'excitement' => $excitement,
+                'lat' => $lat,
+                'lon' => $lon,
+                'created_at' => null,
+            ]);
+
+            DB::commit();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => true,
+                'error' => null,
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
     public function finishTravel(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
