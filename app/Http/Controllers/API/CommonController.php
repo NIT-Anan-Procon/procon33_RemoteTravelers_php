@@ -143,7 +143,7 @@ class CommonController extends Controller
                 'route' => $route,
                 'comments' => $comments,
                 'reports' => $reports,
-                'situation' => $situation,
+                'situation' => $situation['situation'],
                 'error' => null,
             ];
             return $this->resConversionJson($result);
