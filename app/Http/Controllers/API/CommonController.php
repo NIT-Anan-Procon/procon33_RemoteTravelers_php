@@ -129,6 +129,10 @@ class CommonController extends Controller
                 throw new \Exception('permission denied');
             }
 
+            if(!isset($situation)){
+                $situation['situation'] = null;
+            }
+
             // reportsのimageのパスからファイルを取得し、base64に変換する
             foreach ($reports as $report) {
                 $image = \Storage::get('public/'.$report->image);
