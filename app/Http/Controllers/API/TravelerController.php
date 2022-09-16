@@ -18,7 +18,7 @@ class TravelerController extends Controller
 
             // リクエストから受け取った値を取得
             $userId = $request->input('user_id');
-            $image = $request->file('image');
+            $base64image = $request->input('image');
             $comment = $request->input('comment');
             $excitement = $request->input('excitement');
             $lat = $request->input('lat');
@@ -27,14 +27,15 @@ class TravelerController extends Controller
             // userIdからユーザの旅行情報を識別するためのIDを取得
             $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
 
-            // 画像をサーバ上に保存し、パスを取得
-            if ($request->hasFile('image')) {
-                $path = \Storage::put('/public', $image);
-                $path = explode('/', $path);
-            } else {
+            if(!isset($base64image)){
                 throw new \Exception('no image');
             }
-
+            // base64デコード
+            $image = base64_decode($base64image);
+            $path = $this->getFileName($image);
+            // 画像をサーバ上に保存し、パスを取得
+            \Storage::put("/public/$path", $image);
+            
             // 状況把握APIを呼び出し、状況を取得
             $base_url = 'http://172.31.50.221:8081/';
 
@@ -60,7 +61,7 @@ class TravelerController extends Controller
             $travelId = $travelId[0]->travel_id;
             Report::insert([
                 'travel_id' => $travelId,
-                'image' => $path[1],
+                'image' => $path,
                 'comment' => $comment,
                 'excitement' => $excitement,
                 'lat' => $lat,
@@ -242,5 +243,20 @@ class TravelerController extends Controller
             ];
             return $this->resConversionJson($result, $e->getCode());
         }
+    }
+
+    private function getFileName(mixed $image): String
+    {
+        //ファイル数カウント
+        $fileNum = count(\Storage::allFiles('/public'));
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_buffer($finfo, $image);
+        //MIMEタイプをキーとした拡張子の配列
+        $extensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png'
+        ];
+        //MIMEタイプから拡張子を選択してファイル名を作成
+        return "image$fileNum.$extensions[$mime_type]";
     }
 }
