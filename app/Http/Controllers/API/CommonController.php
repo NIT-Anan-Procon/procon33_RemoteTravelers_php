@@ -107,12 +107,19 @@ class CommonController extends Controller
     public function getAlbum(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $album = Account::select('reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->get();
+            // 過去のレポートを取得
+            $albums = Account::select('reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->get();
+
+            // 画像のパスからbase64形式で画像を取得
+            foreach($albums as $album) {
+                $album->image = \Storage::get('public/'.$album->image);
+                $album->image = base64_encode($album->image);
+            }
 
             // レスポンスを返す
             $result = [
                 'ok' => true,
-                'album' => $album,
+                'album' => $albums,
                 'error' => null,
             ];
             return $this->resConversionJson($result);
