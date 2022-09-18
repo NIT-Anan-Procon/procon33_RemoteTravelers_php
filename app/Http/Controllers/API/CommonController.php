@@ -104,6 +104,31 @@ class CommonController extends Controller
         }
     }
 
+    public function getAlbum(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $album = Account::select('reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->get();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => true,
+                'album' => $album,
+                'error' => null,
+            ];
+            return $this->resConversionJson($result);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // レスポンスを返す
+            $result = [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+
+            return $this->resConversionJson($result, $e->getCode());
+        }
+    }
+
     public function getInfo(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
