@@ -32,7 +32,19 @@ class TravelerController extends Controller
             }
             // base64デコード
             $image = base64_decode($base64image);
-            $path = $this->getFileName($image);
+            
+            //ファイル数カウント
+            $fileNum = count(\Storage::allFiles('/public'));
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = finfo_buffer($finfo, $image);
+            //MIMEタイプをキーとした拡張子の配列
+            $extensions = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png'
+            ];
+            //MIMEタイプから拡張子を選択してファイル名を作成
+            $path = "image$fileNum.$extensions[$mime_type]";
+
             // 画像をサーバ上に保存し、パスを取得
             \Storage::put("/public/$path", $image);
             
@@ -243,20 +255,5 @@ class TravelerController extends Controller
             ];
             return $this->resConversionJson($result, $e->getCode());
         }
-    }
-
-    private function getFileName(mixed $image): String
-    {
-        //ファイル数カウント
-        $fileNum = count(\Storage::allFiles('/public'));
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime_type = finfo_buffer($finfo, $image);
-        //MIMEタイプをキーとした拡張子の配列
-        $extensions = [
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png'
-        ];
-        //MIMEタイプから拡張子を選択してファイル名を作成
-        return "image$fileNum.$extensions[$mime_type]";
     }
 }
