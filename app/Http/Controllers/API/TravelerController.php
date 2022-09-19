@@ -52,7 +52,7 @@ class TravelerController extends Controller
             $base_url = 'http://172.31.50.221:8081/';
 
             $data = array(
-                'image' => new \CURLFile(__DIR__ . '/../../../../storage/app/public/' . $path[1]),
+                'image' => new \CURLFile(__DIR__ . '/../../../../storage/app/public/' . $path),
             );
 
             $ch = curl_init();
