@@ -107,8 +107,11 @@ class CommonController extends Controller
     public function getAlbum(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
+            // リクエストから受け取った値を取得
+            $userId = $request->input('user_id');
+
             // 過去のレポートを取得
-            $albums = Account::select('reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->get();
+            $albums = Account::select('reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->where('accounts.user_id', $userId)->get();
 
             // 画像のパスからbase64形式で画像を取得
             foreach($albums as $album) {
