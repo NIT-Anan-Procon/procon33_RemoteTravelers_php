@@ -150,13 +150,13 @@ class CommonController extends Controller
             // ユーザが旅行に参加しているかチェックし、データを取得
             // 現在地、現在地までの経路、提案されている目的地、コメント、旅レポート、旅行者状況を取得
             if ($travel->count() != 0) {
-                $travel_id = $travel[0]->travel_id;
-                $current_location = Location::where('travel_id', $travel_id)->where('flag', 0)->latest()->select('lat', 'lon')->first();
-                $route = Location::where('travel_id', $travel_id)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
-                $destination = Location::where('travel_id', $travel_id)->where('flag', 1)->latest()->select('lat', 'lon')->get();
-                $comments = Comment::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('user_id', 'comment')->get();
-                $reports = Report::where('travel_id', $travel_id)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon', 'image')->get();
-                $situation = Situation::where('travel_id', $travel_id)->latest()->select('situation')->first();
+                $travelId = $travel[0]->travel_id;
+                $current_location = Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first();
+                $route = Location::where('travel_id', $travelId)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
+                $destination = Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get();
+                $comments = Comment::join('travels', 'comments.user_id', '=', 'travels.user_id')->where('comments.travel_id', $travelId)->where('travels.travel_id', $travelId)->orderBy('comments.created_at', 'asc')->select('comments.comment', 'travels.traveler')->get();
+                $reports = Report::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon', 'image')->get();
+                $situation = Situation::where('travel_id', $travelId)->latest()->select('situation')->first();
             } else {
                 throw new \Exception('permission denied');
             }
@@ -277,16 +277,17 @@ class CommonController extends Controller
             // それぞれのテーブルがユーザの最終更新日時より新しいデータがあるかチェック
             $locationUpdateCount = Location::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
             $commentUpdateCount = Comment::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
-            $reportUpdateCount = Report::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
             $situationUpdateCount = Situation::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
+            $reportUpdateCount = Report::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->count();
 
             // 更新があればそれぞれのデータを取得
-            $currentLocation = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->latest()->select('lat', 'lon')->get()[0] : null;
-            $route = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('lat', 'lon')->get() : null;
-            $destination = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 1)->select('lat', 'lon')->get()[0] : null;
-            $comments = ($commentUpdateCount > 0) ? Comment::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('comment_id', 'user_id', 'comment', 'created_at')->get() : null;
-            $reports = ($reportUpdateCount > 0) ? Report::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('report_id', 'user_id', 'image', 'created_at')->get() : null;
-            $situation = ($situationUpdateCount > 0) ? Situation::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('situation_id', 'user_id', 'situation', 'created_at')->get() : null;
+            $currentLocation = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first() : null;
+            $route = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get() : null;
+            $destination = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get() : null;
+            $comments = ($commentUpdateCount > 0) ? Comment::join('travels', 'comments.user_id', '=', 'travels.user_id')->where('comments.travel_id', $travelId)->where('travels.travel_id', $travelId)->orderBy('comments.created_at', 'asc')->select('comments.comment', 'travels.traveler')->get() : null;
+            $situation = ($situationUpdateCount > 0) ? Situation::where('travel_id', $travelId)->latest()->select('situation')->first() : null;
+            //レポートは更新された分だけ取得
+            $reports = ($reportUpdateCount > 0) ? Report::where('travel_id', $travelId)->where('created_at', '>', $lastUpdate)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon', 'image')->get() : null;
 
             DB::commit();
 
