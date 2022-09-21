@@ -111,7 +111,7 @@ class CommonController extends Controller
             $userId = $request->input('user_id');
 
             // 過去のレポートを取得
-            $albums = Account::select('reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->where('accounts.user_id', $userId)->get();
+            $albums = Account::select('reports.created_at', 'reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->where('accounts.user_id', $userId)->get();
 
             // 画像のパスからbase64形式で画像を取得
             foreach($albums as $album) {
