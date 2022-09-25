@@ -155,7 +155,7 @@ class CommonController extends Controller
             if ($travel->count() != 0) {
                 $travelId = $travel[0]->travel_id;
                 $current_location = Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first();
-                $route = Location::where('travel_id', $travelId)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get();
+                $routes = Location::where('travel_id', $travelId)->whereIn('flag', [0, 2])->orderBy('created_at', 'asc')->select('lat', 'lon', 'flag')->get();
                 $destination = Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get();
                 $comments = Comment::join('travels', 'comments.user_id', '=', 'travels.user_id')->where('comments.travel_id', $travelId)->where('travels.travel_id', $travelId)->orderBy('comments.created_at', 'asc')->select('comments.comment', 'travels.traveler')->get();
                 $reports = Report::where('travel_id', $travelId)->orderBy('created_at', 'asc')->select('comment', 'excitement', 'lat', 'lon', 'image')->get();
@@ -166,6 +166,10 @@ class CommonController extends Controller
 
             if(!isset($situation)){
                 $situation['situation'] = null;
+            }
+            //flagを仕様書通りになるよう変換
+            foreach($routes as $route){
+                    $route->flag = ($route->flag == 2)? 1 : 0;
             }
 
             // reportsのimageのパスからファイルを取得し、base64に変換する
@@ -179,7 +183,7 @@ class CommonController extends Controller
                 'ok' => true,
                 'destination' => $destination,
                 'current_location' => $current_location,
-                'route' => $route,
+                'route' => $routes,
                 'comments' => $comments,
                 'reports' => $reports,
                 'situation' => $situation['situation'],
@@ -285,7 +289,7 @@ class CommonController extends Controller
 
             // 更新があればそれぞれのデータを取得
             $currentLocation = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first() : null;
-            $route = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 0)->orderBy('created_at', 'asc')->select('lat', 'lon')->get() : null;
+            $routes = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->whereIn('flag', [0, 2])->orderBy('created_at', 'asc')->select('lat', 'lon', 'flag')->get() : null;
             $destination = ($locationUpdateCount > 0) ? Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get() : null;
             $comments = ($commentUpdateCount > 0) ? Comment::join('travels', 'comments.user_id', '=', 'travels.user_id')->where('comments.travel_id', $travelId)->where('travels.travel_id', $travelId)->orderBy('comments.created_at', 'asc')->select('comments.comment', 'travels.traveler')->get() : null;
             $situation = ($situationUpdateCount > 0) ? Situation::where('travel_id', $travelId)->latest()->select('situation')->first() : null;
@@ -299,12 +303,24 @@ class CommonController extends Controller
             $account->touch();
 
             DB::commit();
-
+            //flagを仕様書通りになるよう変換
+            if(isset($routes)){
+                foreach($routes as $route){
+                    $route->flag = ($route->flag == 2)? 1 : 0;
+                }
+            }
+            // reportsのimageのパスからファイルを取得し、base64に変換する
+            if(isset($reports)){
+                foreach ($reports as $report) {
+                    $image = \Storage::get('public/'.$report->image);
+                    $report->image = base64_encode($image);
+                }
+            }
             // レスポンスを返す
             $result = [
                 'ok' => true,
                 'current_location' => $currentLocation,
-                'route' => $route,
+                'route' => $routes,
                 'destination' => $destination,
                 'comments' => $comments,
                 'reports' => $reports,
