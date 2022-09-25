@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Situation;
 use App\Models\Report;
 use App\Models\Travel;
+use App\Models\Location;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,13 @@ class TravelerController extends Controller
                 'travel_id' => $travelId,
                 'situation' => $situation,
                 'created_at' => null,
+            ]);
+            Location::insert([
+                'travel_id' => $travelId,
+                'user_id' => $userId,
+                'lat' => $lat,
+                'lon' => $lon,
+                'flag' => 2,
             ]);
 
             DB::commit();
