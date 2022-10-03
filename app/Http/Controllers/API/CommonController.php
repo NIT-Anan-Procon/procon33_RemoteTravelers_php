@@ -328,6 +328,11 @@ class CommonController extends Controller
             $account->touch();
 
             DB::commit();
+
+            if(!isset($situation)){
+                $situation['situation'] = null;
+            }
+
             //flagを仕様書通りになるよう変換
             if(isset($routes)){
                 foreach($routes as $route){
@@ -349,7 +354,7 @@ class CommonController extends Controller
                 'destination' => $destination,
                 'comments' => $comments,
                 'reports' => $reports,
-                'situation' => $situation,
+                'situation' => $situation['situation'],
                 'error' => null,
             ];
             return $this->resConversionJson($result);
