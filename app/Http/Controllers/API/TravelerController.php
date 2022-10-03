@@ -30,7 +30,7 @@ class TravelerController extends Controller
             $lon = $request->input('lon');
 
             // userIdからユーザの旅行情報を識別するためのIDを取得
-            $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
+            $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->first();
 
             if(!isset($base64image)){
                 throw new \Exception('no image');
@@ -53,6 +53,27 @@ class TravelerController extends Controller
             // 画像をサーバ上に保存し、パスを取得
             \Storage::put("/public/$path", $image);
 
+            // 旅レポートを保存
+            Report::insert([
+                'travel_id' => $travelId,
+                'image' => $path,
+                'comment' => $comment,
+                'excitement' => $excitement,
+                'lat' => $lat,
+                'lon' => $lon,
+                'created_at' => null,
+            ]);
+            Location::insert([
+                'travel_id' => $travelId,
+                'user_id' => $userId,
+                'lat' => $lat,
+                'lon' => $lon,
+                'flag' => 2,
+            ]);
+
+            DB::commit();
+
+            DB::beginTransaction();
             // 状況把握APIを呼び出し、状況を取得
             $base_url = 'http://172.31.50.221:8081/';
 
@@ -74,28 +95,11 @@ class TravelerController extends Controller
                 throw new \Exception('permission denied');
             }
 
-            // 旅レポートと旅行者状況を保存
-            $travelId = $travelId[0]->travel_id;
-            Report::insert([
-                'travel_id' => $travelId,
-                'image' => $path,
-                'comment' => $comment,
-                'excitement' => $excitement,
-                'lat' => $lat,
-                'lon' => $lon,
-                'created_at' => null,
-            ]);
+            // 旅行者状況を保存
             Situation::insert([
                 'travel_id' => $travelId,
                 'situation' => $situation,
                 'created_at' => null,
-            ]);
-            Location::insert([
-                'travel_id' => $travelId,
-                'user_id' => $userId,
-                'lat' => $lat,
-                'lon' => $lon,
-                'flag' => 2,
             ]);
 
             DB::commit();
