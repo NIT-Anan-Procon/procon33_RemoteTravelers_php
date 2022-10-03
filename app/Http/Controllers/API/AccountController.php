@@ -10,6 +10,11 @@ class AccountController extends Controller
 
     public function signup(): \Illuminate\Http\JsonResponse
     {
+        /*
+         * アカウント登録を実行するAPI
+        */
+
+
         try {
             // ユーザを新規登録し、登録したユーザのIDを取得
             $data = Account::insertGetId([]);

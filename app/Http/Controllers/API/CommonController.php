@@ -16,6 +16,10 @@ class CommonController extends Controller
 {
     public function addComment(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * コメントを追加するAPI
+        */
+
         try {
             DB::beginTransaction();
 
@@ -59,6 +63,10 @@ class CommonController extends Controller
 
     public function checkTraveling(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * ユーザが旅行中か確認するAPI
+        */
+
         try {
             // リクエストから受け取った値を取得
             $userId = $request->input('user_id');
@@ -106,6 +114,10 @@ class CommonController extends Controller
 
     public function getAlbum(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * 過去の旅レポートを取得するAPI
+        */
+
         try {
             // リクエストから受け取った値を取得
             $userId = $request->input('user_id');
@@ -141,6 +153,10 @@ class CommonController extends Controller
 
     public function getInfo(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * 旅行画面・閲覧画面に必要な情報を取得するAPI
+        */
+
         try {
             DB::beginTransaction();
 
@@ -205,6 +221,10 @@ class CommonController extends Controller
 
     public function saveLocation(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * 旅行者の現在地を保存するAPI
+        */
+
         try {
             DB::beginTransaction();
 
@@ -261,6 +281,11 @@ class CommonController extends Controller
 
     public function updateInfo(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * updateInfoで最後に取得してきたデータから更新された分のデータを取得するAPI
+         * Androidで2回目以降に旅行者・閲覧者画面に必要なデータを取得する際に使用
+        */
+
         try {
             DB::beginTransaction();
 

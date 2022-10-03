@@ -14,6 +14,10 @@ class TravelerController extends Controller
 {
     public function addReport(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * 旅レポートを追加するAPI
+        */
+
         try {
             DB::beginTransaction();
 
@@ -33,7 +37,7 @@ class TravelerController extends Controller
             }
             // base64デコード
             $image = base64_decode($base64image);
-            
+
             //ファイル数カウント
             $fileNum = count(\Storage::allFiles('/public'));
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -48,7 +52,7 @@ class TravelerController extends Controller
 
             // 画像をサーバ上に保存し、パスを取得
             \Storage::put("/public/$path", $image);
-            
+
             // 状況把握APIを呼び出し、状況を取得
             $base_url = 'http://172.31.50.221:8081/';
 
@@ -114,60 +118,12 @@ class TravelerController extends Controller
         }
     }
 
-    public function addReportDebug(Request $request): \Illuminate\Http\JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-
-            // リクエストから受け取った値を取得
-            $userId = $request->input('user_id');
-            $comment = $request->input('comment');
-            $excitement = $request->input('excitement');
-            $lat = $request->input('lat');
-            $lon = $request->input('lon');
-
-            // userIdからユーザの旅行情報を識別するためのIDを取得
-            $travelId = Travel::where('user_id', $userId)->where('finished', 0)->where('traveler', 1)->select('travel_id')->get();
-
-            // ユーザが旅行していなければエラーを返す
-            if ($travelId->count() == 0) {
-                throw new \Exception('permission denied');
-            }
-
-            // 旅レポートと旅行者状況を保存
-            $travelId = $travelId[0]->travel_id;
-            Report::insert([
-                'travel_id' => $travelId,
-                'image' => "",
-                'comment' => $comment,
-                'excitement' => $excitement,
-                'lat' => $lat,
-                'lon' => $lon,
-                'created_at' => null,
-            ]);
-
-            DB::commit();
-
-            // レスポンスを返す
-            $result = [
-                'ok' => true,
-                'error' => null,
-            ];
-            return $this->resConversionJson($result);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            // レスポンスを返す
-            $result = [
-                'ok' => false,
-                'error' => $e->getMessage(),
-            ];
-            return $this->resConversionJson($result, $e->getCode());
-        }
-    }
-
     public function finishTravel(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * 旅行を終了するAPI
+        */
+
         try {
             DB::beginTransaction();
 
@@ -211,6 +167,10 @@ class TravelerController extends Controller
 
     public function startTravel(Request $request): \Illuminate\Http\JsonResponse
     {
+        /*
+         * 旅行を開始するAPI
+        */
+
         try {
             DB::beginTransaction();
 
