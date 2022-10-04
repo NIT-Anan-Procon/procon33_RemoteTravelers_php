@@ -262,14 +262,16 @@ class CommonController extends Controller
                 // 最新のレポートの位置を取得
                 $EQUATORIAL_RADIUS = 6378.137;
                 $reportLocation = Location::where('travel_id', $travelId)->where('flag', 2)->latest()->select('lat', 'lon')->first();
-                $distance = $EQUATORIAL_RADIUS * acos(sin($lon) * sin($reportLocation->lon) + cos($lon) * cos($reportLocation->lon) * cos(abs($lat - $reportLocation->lat)));
-                //1km移動したとき
-                if ($distance > 1){
-                    Situation::insert([
-                        'travel_id' => $travelId,
-                        'situation' => '移動中',
-                        'created_at' => null,
-                    ]);
+                if(isset($reportLocation)){
+                    $distance = $EQUATORIAL_RADIUS * acos(sin($lon) * sin($reportLocation->lon) + cos($lon) * cos($reportLocation->lon) * cos(abs($lat - $reportLocation->lat)));
+                    //1km移動したとき
+                    if ($distance > 1){
+                        Situation::insert([
+                            'travel_id' => $travelId,
+                            'situation' => '移動中',
+                            'created_at' => null,
+                        ]);
+                    }
                 }
             }
 
