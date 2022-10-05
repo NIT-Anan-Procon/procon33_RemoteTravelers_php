@@ -311,9 +311,12 @@ class CommonController extends Controller
             // 最終更新日時を取得
             $lastUpdate = Account::where('user_id', $userId)->select('updated_at')->get()[0]->updated_at;
 
+            //最終更新が10秒以内のとき、安定して動作させるため30秒前を最終更新とする
+            if(date("Y-m-d H:i:s",strtotime("-10 second")) < $lastUpdate){
+                $lastUpdate = date("Y-m-d H:i:s",strtotime("-10 second"));
+            }
             // user_idからユーザの旅行情報を識別するためのIDを取得
             $travel = Travel::where('user_id', $userId)->where('finished', 0)->get();
-
             // ユーザが旅行に参加しているかチェックし、データを取得
             if ($travel->count() == 0) {
                 throw new \Exception('permission denied');
