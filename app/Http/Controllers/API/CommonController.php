@@ -170,7 +170,7 @@ class CommonController extends Controller
             // 現在地、現在地までの経路、提案されている目的地、コメント、旅レポート、旅行者状況を取得
             if ($travel->count() != 0) {
                 $travelId = $travel[0]->travel_id;
-                $current_location = Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first();
+                $currentLocation = Location::where('travel_id', $travelId)->where('flag', 0)->latest()->select('lat', 'lon')->first();
                 $routes = Location::where('travel_id', $travelId)->whereIn('flag', [0, 2])->orderBy('created_at', 'asc')->select('lat', 'lon', 'flag')->get();
                 $destination = Location::where('travel_id', $travelId)->where('flag', 1)->latest()->select('lat', 'lon')->get();
                 $comments = Comment::join('travels', 'comments.user_id', '=', 'travels.user_id')->where('comments.travel_id', $travelId)->where('travels.travel_id', $travelId)->orderBy('comments.created_at', 'asc')->select('comments.comment', 'travels.traveler')->get();
@@ -198,7 +198,7 @@ class CommonController extends Controller
             $result = [
                 'ok' => true,
                 'destination' => $destination,
-                'current_location' => $current_location,
+                'current_location' => $currentLocation,
                 'route' => $routes,
                 'comments' => $comments,
                 'reports' => $reports,
@@ -222,7 +222,7 @@ class CommonController extends Controller
     public function saveLocation(Request $request): \Illuminate\Http\JsonResponse
     {
         /*
-         * 旅行者の現在地を保存するAPI
+         * 旅行者の現在地・行先提案の行先を保存するAPI
         */
 
         try {
@@ -258,6 +258,22 @@ class CommonController extends Controller
                 'lon' => $lon,
                 'flag' => $suggestionFlag,
             ]);
+            if($suggestionFlag == 0){
+                // 最新のレポートの位置を取得
+                $EQUATORIAL_RADIUS = 6378.137;
+                $reportLocation = Location::where('travel_id', $travelId)->where('flag', 2)->latest()->select('lat', 'lon')->first();
+                if(isset($reportLocation)){
+                    $distance = $EQUATORIAL_RADIUS * acos(sin($lon) * sin($reportLocation->lon) + cos($lon) * cos($reportLocation->lon) * cos(abs($lat - $reportLocation->lat)));
+                    //1km移動したとき
+                    if ($distance > 1){
+                        Situation::insert([
+                            'travel_id' => $travelId,
+                            'situation' => '移動中',
+                            'created_at' => null,
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
 
@@ -295,9 +311,12 @@ class CommonController extends Controller
             // 最終更新日時を取得
             $lastUpdate = Account::where('user_id', $userId)->select('updated_at')->get()[0]->updated_at;
 
+            //最終更新が10秒以内のとき、安定して動作させるため10秒前を最終更新とする
+            if(date("Y-m-d H:i:s",strtotime("-10 second")) < $lastUpdate){
+                $lastUpdate = date("Y-m-d H:i:s",strtotime("-10 second"));
+            }
             // user_idからユーザの旅行情報を識別するためのIDを取得
             $travel = Travel::where('user_id', $userId)->where('finished', 0)->get();
-
             // ユーザが旅行に参加しているかチェックし、データを取得
             if ($travel->count() == 0) {
                 throw new \Exception('permission denied');
@@ -328,6 +347,11 @@ class CommonController extends Controller
             $account->touch();
 
             DB::commit();
+
+            if(!isset($situation)){
+                $situation['situation'] = null;
+            }
+
             //flagを仕様書通りになるよう変換
             if(isset($routes)){
                 foreach($routes as $route){
@@ -349,7 +373,7 @@ class CommonController extends Controller
                 'destination' => $destination,
                 'comments' => $comments,
                 'reports' => $reports,
-                'situation' => $situation,
+                'situation' => $situation['situation'],
                 'error' => null,
             ];
             return $this->resConversionJson($result);
