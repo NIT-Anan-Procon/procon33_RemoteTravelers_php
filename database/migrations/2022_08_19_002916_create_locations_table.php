@@ -4,13 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/*
+ * 旅行者の現在の位置情報、閲覧者に提案された行き先の位置情報を
+ * travel_idと紐づけて管理するテーブル
+*/
 class CreateLocationsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('locations', function (Blueprint $table) {
@@ -23,11 +22,6 @@ class CreateLocationsTable extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('locations');

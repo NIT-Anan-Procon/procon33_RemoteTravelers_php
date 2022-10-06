@@ -15,6 +15,56 @@ php artisan key:generate
 php artisan migrate
 ```
 
+## ルーティング一覧
+- POST /api/common/add-comment
+  - コメントを追加する
+- GET /api/common/check-traveling
+  - 旅行中かどうかを確認する
+- GET /api/common/get-info
+  - 旅行情報を取得する
+- POST /api/common/save-location
+  - 現在地・行き先を保存する
+- POST /api/common/update-info
+  - 更新された旅行情報を取得する
+- GET /api/common/get-album
+  - 過去の旅レポートを取得する
+- POST /api/traveler/add-report
+  - 旅レポートを追加する
+- POST /api/traveler/finish-travel
+  - 旅を終了する
+- POST /api/traveler/start-travel
+  - 旅を開始する
+- POST /api/user/signup
+  - ユーザー登録する
+
+## マイグレーション一覧
+- database/migrations/2022_08_17_121618_create_accounts_table.php
+    - それぞれのアカウントのuser_idや旅行に関する情報の最終更新日時を管理するテーブル
+- database/migrations/2022_08_19_002916_create_locations_table.php
+    - 旅行者の現在の位置情報、閲覧者に提案された行き先の位置情報をtravel_idと紐づけて管理するテーブル
+- database/migrations/2022_08_19_002940_create_travels_table.php
+    - 旅行に参加するユーザを管理するテーブル
+- database/migrations/2022_08_19_003008_create_comments_table.php
+    - 旅行に関するコメントを管理するテーブル
+- database/migrations/2022_08_19_003028_create_reports_table.php
+    - 旅行時の旅レポートを管理するテーブル
+- database/migrations/2022_08_19_003051_create_situations_table.php
+    - 旅行者の現在の状況を管理するテーブル
+
+## モデル一覧
+- app/Models/Account.php
+    - アカウントの情報を管理するモデル
+- app/Models/Comment.php
+    - 旅行に関するコメントを管理するモデル
+- app/Models/Location.php
+    - 旅行者の現在の位置情報、閲覧者に提案された行き先の位置情報を管理するモデル
+- app/Models/Report.php
+    - 旅行時の旅レポートを管理するモデル
+- app/Models/Situation.php
+    - 旅行者の現在の状況を管理するモデル
+- app/Models/Travel.php
+    - 旅行に参加するユーザを管理するモデル
+
 ## API一覧
 - app/Http/Controllers/API/AccountController.php
   - signup

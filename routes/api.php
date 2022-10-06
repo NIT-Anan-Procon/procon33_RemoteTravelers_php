@@ -17,5 +17,4 @@ Route::get('common/get-album', 'App\Http\Controllers\API\CommonController@getAlb
 Route::post('traveler/add-report', 'App\Http\Controllers\API\TravelerController@addReport');
 Route::post('traveler/finish-travel', 'App\Http\Controllers\API\TravelerController@finishTravel');
 Route::post('traveler/start-travel', 'App\Http\Controllers\API\TravelerController@startTravel');
-Route::post('traveler/add-report-debug', 'App\Http\Controllers\API\TravelerController@addReportDebug');
 Route::post('user/signup', 'App\Http\Controllers\API\AccountController@signup');
