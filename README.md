@@ -16,6 +16,7 @@ php artisan migrate
 ```
 
 ## ルーティング一覧
+```routes/api.php```に記述
 - POST /api/common/add-comment
   - コメントを追加する
 - GET /api/common/check-traveling
