@@ -131,7 +131,7 @@ class CommonController extends Controller
                 $album->image = \Storage::get('public/'.$album->image);
                 $album->image = base64_encode($album->image);
 
-                $album->created_at = $album->created_at->setTimezone('Asia/Tokyo');
+                $album->created_at = new \DateTime($album->created_at." +9 hours");
             }
 
             // レスポンスを返す
