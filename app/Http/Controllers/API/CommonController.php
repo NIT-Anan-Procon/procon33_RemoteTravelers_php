@@ -126,9 +126,12 @@ class CommonController extends Controller
             $albums = Account::select('reports.created_at', 'reports.image', 'reports.comment', 'reports.excitement', 'reports.lat', 'reports.lon')->join('travels', 'accounts.user_id', '=', 'travels.user_id')->join('reports', 'travels.travel_id', '=', 'reports.travel_id')->where('accounts.user_id', $userId)->get();
 
             // 画像のパスからbase64形式で画像を取得
+            // 日本時間に変更
             foreach($albums as $album) {
                 $album->image = \Storage::get('public/'.$album->image);
                 $album->image = base64_encode($album->image);
+
+                $album->created_at = $album->created_at->setTimezone('Asia/Tokyo');
             }
 
             // レスポンスを返す
