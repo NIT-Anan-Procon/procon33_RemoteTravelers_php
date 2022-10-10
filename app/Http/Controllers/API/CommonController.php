@@ -28,7 +28,7 @@ class CommonController extends Controller
             $comment = $request->input('comment');
 
             // user_idからユーザの旅行情報を識別するためのIDを取得
-            $travel = Travel::where('user_id', $userId)->select('travel_id')->get();
+            $travel = Travel::where('user_id', $userId)->where('finiehd', 0)->select('travel_id')->get();
 
             // ユーザが旅行していなければ例外処理を実行する
             if ($travel->count() == 0) {
