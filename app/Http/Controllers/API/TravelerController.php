@@ -38,11 +38,9 @@ class TravelerController extends Controller
             $travelId = $travel[0]->travel_id;
 
             // 同じ場所では旅レポートを複数保存できないようにする
-            $locations = Location::where('travel_id', $travelId)->select('lat', 'lon')->get();
-            foreach ($locations as $location) {
-                if ($location->lat == $lat && $location->lon == $lon) {
-                    throw new \Exception('same location');
-                }
+            $locations = Report::where('travel_id', $travelId)->where('lat', $lat)->where('lon', $lon)->get();
+            if ($locations->count() != 0) {
+                throw new \Exception('same location');
             }
 
             if(!isset($base64image)){
