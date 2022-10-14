@@ -35,7 +35,15 @@ class TravelerController extends Controller
             if ($travel->count() == 0) {
                 throw new \Exception('permission denied');
             }
-            $travelId = $travel[0]->travel_id; 
+            $travelId = $travel[0]->travel_id;
+
+            // 同じ場所では旅レポートを複数保存できないようにする
+            $locations = Location::where('travel_id', $travelId)->select('lat', 'lon')->get();
+            foreach ($locations as $location) {
+                if ($location->lat == $lat && $location->lon == $lon) {
+                    throw new \Exception('same location');
+                }
+            }
 
             if(!isset($base64image)){
                 throw new \Exception('no image');
