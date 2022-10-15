@@ -268,13 +268,13 @@ class CommonController extends Controller
                 if(isset($reportLocation)){
                     $distance = $EQUATORIAL_RADIUS * acos(sin($lon) * sin($reportLocation->lon) + cos($lon) * cos($reportLocation->lon) * cos(abs($lat - $reportLocation->lat)));
                     //1km移動したとき
-                    if ($distance > 3){
-                        Situation::insert([
-                            'travel_id' => $travelId,
-                            'situation' => '移動中',
-                            'created_at' => null,
-                        ]);
-                    }
+//                    if ($distance > 3){
+//                        Situation::insert([
+//                            'travel_id' => $travelId,
+//                            'situation' => '移動中',
+//                            'created_at' => null,
+//                        ]);
+//                    }
                 }
             }
 
